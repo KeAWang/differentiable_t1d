@@ -1,6 +1,12 @@
 # Differentiable T1D Simulator
 
-Based on [simglucose](https://github.com/jxx123/simglucose/)
+Implementation of the UVa/Padova 2008 Simulator for Type 1 Diabetes from
+
+> Kovatchev et al., 2009. In silico preclinical trials: a proof of concept in closed-loop control of type 1 diabetes.
+
+Example PyTorch code: `python uva_padova_torch.py`
+
+Code based on [simglucose](https://github.com/jxx123/simglucose/)
 
 ## Glossary of terms in the simulator
 ### Rate of glucose entering the blood from the stomach (oral glucose subsystem)
@@ -32,6 +38,7 @@ Based on [simglucose](https://github.com/jxx123/simglucose/)
 ### Insulin kinetics
 
 | State index | Descriptive name | Units | Description |
+| --- | --- | --- | --- |
 | 5 | I_p | pmol/kg | insulin masses in plasma per kg of bodyweight |
 | 6 | X | pmol/L | insulin in the interstitial fluid |
 | 7 | I_1 | pmol/L | delayed insulin compartment 1 (I tilde in Andy's paper)|
