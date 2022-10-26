@@ -33,7 +33,7 @@ Code based on [simglucose](https://github.com/jxx123/simglucose/)
 | --- | EGP | mg/kg/min | endogenous glucose production |
 | --- | Uii | mg/kg/min | insulin independent glucose utilization |
 | --- | G | mg/dL | plasma glucose concentration |
-| 12  | Gs | mg/dL | glucose concentration in the subcutaneous tissue |
+| 12  | Gs | mg/kg | glucose concentration in the subcutaneous tissue |
 
 ### Insulin kinetics
 

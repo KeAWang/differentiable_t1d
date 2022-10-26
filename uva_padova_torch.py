@@ -100,6 +100,15 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     dstate_dt = torch.stack([dq_sto1, dq_sto2, dq_gut, dG_p, dG_t, dI_p, dX, dI_1, dI_d, dI_l, dI_sc1, dI_sc2, dGs], dim=-1)
     return dstate_dt
 
+def observe_blood_glucose(params:Params, state):
+    G = state[..., 3] / params.Vg
+    return G
+
+def observe_subcutaneous_glucose(params:Params, state):
+    Gs = state[..., 12]
+    return Gs
+
+
 if __name__ == "__main__":
     from utils import initialize_patient
     params, unused_params, init_state = initialize_patient(1, to_tensors=True)
@@ -107,3 +116,6 @@ if __name__ == "__main__":
     t = 0
     carbs, insulin = torch.tensor(0.0), torch.tensor(0.0)
     dstate_dt = uva_padova_2008_dynamics(params, t, state, carbs, insulin)
+
+    print("Blood glucose", observe_blood_glucose(params, state).item(), "mg/dL")
+    print("Subcutaneous glucose", observe_subcutaneous_glucose(params, state).item(), "mg/dL")
