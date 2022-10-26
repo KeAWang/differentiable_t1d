@@ -35,6 +35,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     kgut = params.kmin + (params.kmax - params.kmin) / 2 * (
         torch.tanh(alpha * (Qsto - params.b * carbs)) - torch.tanh(beta * (Qsto - params.d * carbs)) + 2
     )
+    kgut = torch.where(carbs > 0, kgut, params.kmax)
     # Equation 7 of Dalla Man et al., 2006
     # Divide by BW to get mg/kg/min from mg/min
     Ra = params.f * params.kabs * q_gut / params.BW
