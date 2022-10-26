@@ -21,7 +21,7 @@ Code based on [simglucose](https://github.com/jxx123/simglucose/)
 | --- | kmin | 1/min | --- |
 | --- | kabs | 1/min | --- |
 | --- | kgut | 1/min | --- |
-| --- | D | mg/min | amount of glucose ingested instantaneously |
+| --- | carbs | mg/min | rate of glucose ingested instantaneously |
 | --- | f | 1 | one over the fraction of the total ingested glucose; i.e. total / D |
 
 ### Glucose kinetics
@@ -45,6 +45,7 @@ Code based on [simglucose](https://github.com/jxx123/simglucose/)
 | 8 | I_d | pmol/L | delayed insulin compartment 2 (X_L in Andy's paper)|
 | 9 | I_l | pmol/kg | insulin masses in plasma per kg of bodyweight |
 | --- | I | pmol/L | plasma insulin concentration |
+| --- | insulin | pmol/kg/min | insulin infusion rate per kg of bodyweight |
 | --- | V_I | L/kg | distribution volume of insulin |
 | 10 | I_sc1 | pmol/kg | nonmonomeric insulin in subcutaneous space |
 | 11 | I_sc2 | pmol/kg | monomeric insulin in subcutaneous space |

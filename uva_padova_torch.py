@@ -59,7 +59,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     # TODO: update to new version of Uid that uses risk?
     Uid = Vmt * G_t / (Kmt + G_t)
     # Equation 3 bottom of Dalla Man et al., 2007b
-    It = I_p / params.Vi
+    I = I_p / params.Vi
     # Equation 1 top of Dalla Man et al., 2007b
     dG_p = EGP + Ra - Uii - E - params.k1 * G_p + params.k2 * G_t
     dG_p = dG_p * (G_p > 0.0)  # Constrain non-negative 
@@ -74,9 +74,9 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     dI_p = -(params.m2 + params.m4) * I_p + Ra_I
     dI_p = dI_p * (I_p > 0.0)# Constrain non-negative
     # Equation 18 of Dalla Man et al., 2007b
-    dX = -params.p2u * X + params.p2u * (It - params.Ib)
+    dX = -params.p2u * X + params.p2u * (I - params.Ib)
     # Equation 11 of Dalla Man et al., 2007b
-    dI_1= -params.ki * (I_1 - It)
+    dI_1= -params.ki * (I_1 - I)
     dI_d= -params.ki * (I_d - I_1)
     # Equation 3 top of Dalla Man et al., 2007b
     dI_l= -(params.m1 + params.m30) * I_l + params.m2 * I_p
