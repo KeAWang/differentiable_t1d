@@ -31,7 +31,9 @@ Code based on [simglucose](https://github.com/jxx123/simglucose/)
 | 3 | G_p | mg/kg | glucose mass in plasma per kg of bodyweight |
 | 4 | G_t | mg/kg | glucose mass in tissue per kg of bodyweight |
 | --- | EGP | mg/kg/min | endogenous glucose production |
+| --- | E   | mg/kg/min | renal glucose excretion |
 | --- | Uii | mg/kg/min | insulin independent glucose utilization |
+| --- | Uid | mg/kg/min | insulin dependent glucose utilization |
 | --- | G | mg/dL | plasma glucose concentration |
 | 12  | Gs | mg/kg | glucose concentration in the subcutaneous tissue |
 
@@ -43,7 +45,7 @@ Code based on [simglucose](https://github.com/jxx123/simglucose/)
 | 6 | X | pmol/L | insulin in the interstitial fluid |
 | 7 | I_1 | pmol/L | delayed insulin compartment 1 (I tilde in Andy's paper)|
 | 8 | I_d | pmol/L | delayed insulin compartment 2 (X_L in Andy's paper)|
-| 9 | I_l | pmol/kg | insulin masses in plasma per kg of bodyweight |
+| 9 | I_l | pmol/kg | insulin masses in liver per kg of bodyweight |
 | --- | I | pmol/L | plasma insulin concentration |
 | --- | insulin | pmol/kg/min | insulin infusion rate per kg of bodyweight |
 | --- | V_I | L/kg | distribution volume of insulin |
