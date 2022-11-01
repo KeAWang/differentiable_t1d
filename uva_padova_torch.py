@@ -120,7 +120,7 @@ if __name__ == "__main__":
     from utils import initialize_patient
     params, unused_params, init_state = initialize_patient(1, to_tensors=True)
     params = Params(*[p.requires_grad_() for p in params])
-    state = torch.tensor(init_state, dtype=torch.float, requires_grad=True)
+    state = init_state.clone().requires_grad_()
     t = 0
     carbs, insulin = torch.tensor(1000., requires_grad=True), torch.tensor(0., requires_grad=True)
     dstate_dt = uva_padova_2008_dynamics(params, t, state, carbs, insulin)
