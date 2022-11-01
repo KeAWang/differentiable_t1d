@@ -26,16 +26,23 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     q_sto1, q_sto2, q_gut, G_p, G_t, I_p, X, I_1, I_d, I_l, I_sc1, I_sc2, Gs = torch.split(state, 1, dim=-1)
 
     #### Oral glucose subsystem
-    Qsto = q_sto1 + q_sto2
+    #Qsto = q_sto1 + q_sto2
     # Equation 10 of Dalla Man et al., 2006
-    alpha = 5 / 2 / (1 - params.b) / carbs 
+    #alpha = 5 / 2 / (1 - params.b) / (carbs + eps)
     # Equation 11 of Dalla Man et al., 2006
-    beta = 5 / 2 / params.d / carbs
+    #beta = 5 / 2 / params.d / (carbs + eps)
+
     # Equation 12 of Dalla Man et al., 2006
-    kgut = params.kmin + (params.kmax - params.kmin) / 2 * (
-        torch.tanh(alpha * (Qsto - params.b * carbs)) - torch.tanh(beta * (Qsto - params.d * carbs)) + 2
-    )
-    kgut = torch.where(carbs > 0, kgut, params.kmax)
+    #kgut = params.kmin + (params.kmax - params.kmin) / 2 * (
+    #    torch.tanh(alpha * (Qsto - params.b * carbs)) - torch.tanh(beta * (Qsto - params.d * carbs)) + 2
+    #)
+    #kgut = torch.where(carbs > eps, kgut, params.kmax)
+    # NOTE: Eq 12 leads to zero gradients of kgut with respect to carbs if tanh saturates
+    # This happens if carbs is too small, causing alpha and beta to be too large
+    # Indeed, often kgut ends up just being constant in the simulation
+    # Thus instead, we use a constant value
+    kgut = params.kmax
+
     # Equation 7 of Dalla Man et al., 2006
     # Divide by BW to get mg/kg/min from mg/min
     Ra = params.f * params.kabs * q_gut / params.BW
@@ -97,7 +104,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     dGs= -params.ksc * Gs + params.ksc * G_p
     dGs= dGs* (Gs > 0.0)# Constrain non-negative
 
-    dstate_dt = torch.stack([dq_sto1, dq_sto2, dq_gut, dG_p, dG_t, dI_p, dX, dI_1, dI_d, dI_l, dI_sc1, dI_sc2, dGs], dim=-1)
+    dstate_dt = torch.cat([dq_sto1, dq_sto2, dq_gut, dG_p, dG_t, dI_p, dX, dI_1, dI_d, dI_l, dI_sc1, dI_sc2, dGs], dim=-1)
     return dstate_dt
 
 def observe_blood_glucose(params:Params, state):
@@ -112,10 +119,17 @@ def observe_subcutaneous_glucose(params:Params, state):
 if __name__ == "__main__":
     from utils import initialize_patient
     params, unused_params, init_state = initialize_patient(1, to_tensors=True)
-    state = torch.as_tensor(init_state, dtype=torch.float)
+    params = Params(*[p.requires_grad_() for p in params])
+    state = torch.tensor(init_state, dtype=torch.float, requires_grad=True)
     t = 0
-    carbs, insulin = torch.tensor(0.0), torch.tensor(0.0)
+    carbs, insulin = torch.tensor(1000., requires_grad=True), torch.tensor(0., requires_grad=True)
     dstate_dt = uva_padova_2008_dynamics(params, t, state, carbs, insulin)
 
     print("Blood glucose", observe_blood_glucose(params, state).item(), "mg/dL")
     print("Subcutaneous glucose", observe_subcutaneous_glucose(params, state).item(), "mg/dL")
+    # check differentiability
+    dstate_dt.sum().backward()
+    print("Carbs gradient", carbs.grad)
+    print("Insulin gradient", insulin.grad)
+    print("State gradient", state.grad)
+    print("Params gradient", Params(*[p.grad for p in params]))
