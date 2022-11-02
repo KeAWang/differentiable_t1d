@@ -112,7 +112,7 @@ def observe_blood_glucose(params:Params, state):
     return G
 
 def observe_subcutaneous_glucose(params:Params, state):
-    Gs = state[..., 12]
+    Gs = state[..., 12] / params.Vg
     return Gs
 
 
