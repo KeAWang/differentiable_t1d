@@ -48,7 +48,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     Ra = params.f * params.kabs * q_gut / params.BW
     # Equation 7 of Dalla Man et al., 2006
     dq_sto1 = -params.kmax * q_sto1 + carbs
-    dq_sto2  = params.kmax * q_sto1 - q_sto2 * kgut
+    dq_sto2  = params.kmax * q_sto1 - kgut * q_sto2
     dq_gut = kgut * q_sto2 - params.kabs * q_gut
 
     #### Glucose kinetics
@@ -65,9 +65,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     Kmt = params.Km0
     # Equation 15 of Dalla Man et al., 2007b
     # TODO: update to new version of Uid that uses risk?
-    Uid = Vmt * G_t / (Kmt + G_t)
-    # Equation 3 bottom of Dalla Man et al., 2007b
-    I = I_p / params.Vi
+    Uid = Vmt * G_t / (Kmt + G_t) # nonlinear Michaelis-Menten term for insulin dependent glucose utilization
     # Equation 1 top of Dalla Man et al., 2007b
     dG_p = EGP + Ra - Uii - E - params.k1 * G_p + params.k2 * G_t
     dG_p = dG_p * (G_p > 0.0)  # Constrain non-negative 
@@ -81,6 +79,8 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     Ra_I = params.m1 * I_l + params.ka1 * I_sc1 + params.ka2 * I_sc2
     dI_p = -(params.m2 + params.m4) * I_p + Ra_I
     dI_p = dI_p * (I_p > 0.0)# Constrain non-negative
+    # Equation 3 bottom of Dalla Man et al., 2007b
+    I = I_p / params.Vi
     # Equation 18 of Dalla Man et al., 2007b
     dX = -params.p2u * X + params.p2u * (I - params.Ib)
     # Equation 11 of Dalla Man et al., 2007b
