@@ -4,9 +4,11 @@ Implementation of the UVa/Padova 2008 Simulator for Type 1 Diabetes from
 
 > Kovatchev et al., 2009. In silico preclinical trials: a proof of concept in closed-loop control of type 1 diabetes.
 
+To install: clone the repo and run `pip install .` from the directory of this package.
+
 Example PyTorch code: `python uva_padova_torch.py`
 
-Code based on [simglucose](https://github.com/jxx123/simglucose/). We use CR, CF, TDI values from [RL4BG](https://github.com/MLD3/RL4BG/blob/master/bgp/simglucose/params/Quest2.csv).
+Code based on [simglucose](https://github.com/jxx123/simglucose/). We use ICR, CF values from [RL4BG](https://github.com/MLD3/RL4BG/blob/master/bgp/simglucose/params/Quest2.csv).
 
 ## Glossary of terms in the simulator
 ### Rate of glucose entering the blood from the stomach (oral glucose subsystem)

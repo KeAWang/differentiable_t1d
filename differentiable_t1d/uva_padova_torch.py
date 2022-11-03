@@ -1,4 +1,4 @@
-from utils import Params
+from differentiable_t1d.utils import Params
 
 import torch
 
@@ -149,7 +149,7 @@ def square_controls(widths, events, t):
 
 
 if __name__ == "__main__":
-    from utils import initialize_patient
+    from differentiable_t1d.utils import initialize_patient
     params, unused_params, init_state = initialize_patient(1, to_tensors=True)
     params = Params(*[p.requires_grad_() for p in params])
     state = init_state.clone().requires_grad_()
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     print("Blood glucose", observe_blood_glucose(params, state).item(), "mg/dL")
     print("Subcutaneous glucose", observe_subcutaneous_glucose(params, state).item(), "mg/dL")
     # check differentiability
-    dstate_dt.sum().backward()
+    dstate_dt[0].sum().backward()
     print("Carbs gradient", carbs.grad)
     print("Insulin gradient", insulin.grad)
     print("State gradient", state.grad)

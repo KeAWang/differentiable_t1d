@@ -1,0 +1,2 @@
+include README.md
+include differentiable_t1d/files/*.csv

@@ -3,12 +3,13 @@ import torch
 
 import pandas as pd
 from collections import namedtuple
+import pkg_resources
 from scipy.stats import truncnorm
 from typing import Union
 
 
-# TODO: make sure that all units make sense
-# TODO: make vpatient_params.csv installable via pip
+VPATIENT_PARAMS_PATH = pkg_resources.resource_filename("differentiable_t1d", "files/vpatient_params.csv")
+VPATIENT_CONTROL_PARMS_PATH = pkg_resources.resource_filename("differentiable_t1d", "files/vpatient_control_params.csv")
 
 Params = namedtuple(
     "Params",
@@ -70,8 +71,8 @@ def load_patient(patient_id: Union[str, int]):
             raise ValueError("patient_id should be between 1 and 30")
         patient_id = f"{kind}#{id:03d}"
     print("Loading patient", patient_id)
-    df = pd.read_csv("vpatient_params.csv", index_col=0)
-    df2 = pd.read_csv("vpatient_control_params.csv", index_col=0)
+    df = pd.read_csv(VPATIENT_PARAMS_PATH, index_col=0)
+    df2 = pd.read_csv(VPATIENT_CONTROL_PARMS_PATH, index_col=0)
     df = pd.concat([df, df2], axis=1) 
     patient_series = df.loc[patient_id]
     return patient_series
