@@ -1,7 +1,9 @@
 import numpy as np
 import torch
+
 import pandas as pd
 from collections import namedtuple
+from scipy.stats import truncnorm
 from typing import Union
 
 
@@ -89,6 +91,67 @@ def initialize_patient(patient_id: Union[str, int], to_tensors=False):
         init_state = torch.as_tensor(init_state, dtype=torch.float)
 
     return params, unused_params, init_state
+
+
+def generate_meals(seed=0, num_days=1, bw=60.0):
+    # bodyweight bw in kg
+    # each row of meals is [time, amount] in minutes and grams
+    rng = np.random.RandomState(seed)
+    meals = []
+    for i in range(num_days):
+        new_meals = generate_meals_one_day(rng, bw)
+        new_meals[:, 0] += i * 24 * 60
+        meals.append(new_meals)
+    return np.concatenate(meals)
+
+def generate_meals_one_day(rng, bw: float):
+    meals = []
+
+    # Probability of taking each meal
+    # [breakfast, snack1, lunch, snack2, dinner, snack3]
+    prob = np.array([1.0, 0.25, 1.0, 0.25, 1.0, 0.5])
+    time_lb = np.array([5, 9, 10, 14, 16, 20]) * 60.
+    time_ub = np.array([9, 10, 14, 16, 20, 23]) * 60.
+    time_mu = np.array([7, 9.5, 12, 15, 18, 21.5]) * 60.
+    time_sigma = np.array([60, 30, 60, 30, 60, 30])
+    amount_mu = np.array([0.75, 0.5, 1.0, 0.5, 1.25, 0.5]) * bw
+    amount_sigma = np.array([0.15, 0.05, 0.15, 0.05, 0.15, 0.05]) * bw
+
+    for p, tlb, tub, tbar, tsd, mbar, msd in zip(prob, time_lb, time_ub,
+                                                 time_mu, time_sigma,
+                                                 amount_mu, amount_sigma):
+        if rng.rand() < p:
+            tmeal = np.round(
+                truncnorm.rvs(a=(tlb - tbar) / tsd,
+                              b=(tub - tbar) / tsd,
+                              loc=tbar,
+                              scale=tsd,
+                              random_state=rng),
+                )
+            amount = round(max(rng.normal(mbar, msd), 0.))
+            meal = np.array([tmeal, amount])  # time in minutes, amount in grams
+            meals.append(meal)
+    meals = np.stack(meals)
+    return meals
+
+def generate_insulin_events(meals, icr, num_days):
+    # Assumes meals are in grams, basal is in units, icr is in grams per unit, and bw is in kg
+    bolus_times = meals[:, 0] - 5. # bolus a few minutes before meals
+    bolus_dose = meals[:, 1] / icr  # units: IU
+    insulin_times = np.concatenate([bolus_times])
+    insulin_dose = np.concatenate([bolus_dose])
+
+    # sort by time
+    idx = np.argsort(insulin_times)
+    insulin_times = insulin_times[idx]
+    insulin_dose = insulin_dose[idx]
+    insulin_events = np.stack([insulin_times, insulin_dose], axis=1)
+    return insulin_events
+
+def generate_meals_and_insulin_events(icr, bw, num_days, seed):
+    meals = generate_meals(seed, num_days, bw)
+    insulin_events = generate_insulin_events(meals, icr=icr, num_days=num_days)
+    return meals, insulin_events
 
 if __name__ == "__main__":
     params, unused_params, init_state = initialize_patient(1)

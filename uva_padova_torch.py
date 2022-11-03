@@ -111,6 +111,43 @@ def observe_subcutaneous_glucose(params:Params, state):
     return Gs
 
 
+def square_controls(widths, events, t):
+    """Compute a square wave function with the same width for each bump
+
+    Each event is an array of [event_time, amplitude].
+
+    Args:
+        events (torch.Tensor): (T_e, 2) tensor of T_e events or (N, T_e, 2) tensor of events.
+            If (N, T_e, 2), then each `t` has its own event  sequence
+        t (torch.Tensor): (N,) tensor of times.
+        width (torch.Tensor): duration of each event; scalar, (T_e,) or (N, T_e) tensor
+
+    Example:
+        width = torch.tensor(15.0)
+        events = torch.tensor([
+            [0.0, 1.0],
+            [30.0, 3.0],
+            [45.0, 7.0],
+        ])
+        t = torch.linspace(0, 60, 1000)
+        u = square_controls(width, events, t)
+    """
+    N, = t.shape
+    T_e, D = events.shape[-2:]
+    assert D == 2
+    events = events.broadcast_to((N, T_e, D))
+    widths = widths.broadcast_to((N, T_e))
+
+    timestamps, amplitudes = events.unbind(-1) # (N, T_e), (N, T_e)
+
+    t_since = t[:, None] - timestamps # (N, T_e)
+    relevant = t_since >= 0 # (N, T_e)
+    t_since = torch.where(relevant, t_since, torch.zeros_like(t_since)) # (N, T_e)
+    u = amplitudes * relevant * (t_since < widths) # (N, T_e)
+    u = u.sum(-1) # (N,)
+    return u
+
+
 if __name__ == "__main__":
     from utils import initialize_patient
     params, unused_params, init_state = initialize_patient(1, to_tensors=True)
