@@ -78,8 +78,8 @@ def initialize_patient(patient_id: Union[str, int], to_tensors=False):
 
     all_params = load_patient(patient_id)
     params = Params( **{k: np.array(float(v)) for k, v in all_params.items() if k in Params._fields})
-    unused_params = { k: v for k, v in all_params.items() if k not in Params._fields }
     init_state = np.array([all_params[f"x0_{i}"] for i in range(1, 14)])
+    unused_params = { k: v for k, v in all_params.items() if (k not in Params._fields) and (k[:2] != "x0")}
 
     if to_tensors:
         params = Params(*[torch.as_tensor(p, dtype=torch.float) for p in params])
