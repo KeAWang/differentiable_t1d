@@ -6,7 +6,7 @@ Implementation of the UVa/Padova 2008 Simulator for Type 1 Diabetes from
 
 Example PyTorch code: `python uva_padova_torch.py`
 
-Code based on [simglucose](https://github.com/jxx123/simglucose/)
+Code based on [simglucose](https://github.com/jxx123/simglucose/). We use CR, CF, TDI values from [RL4BG](https://github.com/MLD3/RL4BG/blob/master/bgp/simglucose/params/Quest2.csv).
 
 ## Glossary of terms in the simulator
 ### Rate of glucose entering the blood from the stomach (oral glucose subsystem)

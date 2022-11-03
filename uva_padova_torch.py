@@ -27,13 +27,14 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     q_sto1, q_sto2, q_gut, G_p, G_t, I_p, X, I_1, I_d, I_l, I_sc1, I_sc2, Gs = torch.split(state, 1, dim=-1)
 
     #### Oral glucose subsystem
+    #eps = 1e-8
     #Qsto = q_sto1 + q_sto2
-    # Equation 10 of Dalla Man et al., 2006
+    ## Equation 10 of Dalla Man et al., 2006
     #alpha = 5 / 2 / (1 - params.b) / (carbs + eps)
-    # Equation 11 of Dalla Man et al., 2006
+    ## Equation 11 of Dalla Man et al., 2006
     #beta = 5 / 2 / params.d / (carbs + eps)
 
-    # Equation 12 of Dalla Man et al., 2006
+    ## Equation 12 of Dalla Man et al., 2006
     #kgut = params.kmin + (params.kmax - params.kmin) / 2 * (
     #    torch.tanh(alpha * (Qsto - params.b * carbs)) - torch.tanh(beta * (Qsto - params.d * carbs)) + 2
     #)
@@ -82,7 +83,7 @@ def uva_padova_2008_dynamics(params: Params, t, state: torch.Tensor, carbs: torc
     # Equation 3 bottom of Dalla Man et al., 2007b
     I = I_p / params.Vi
     # Equation 18 of Dalla Man et al., 2007b
-    dX = -params.p2u * X + params.p2u * torch.clamp(I - params.Ib, min=0.)
+    dX = -params.p2u * X + params.p2u * (I - params.Ib) #torch.clamp(I - params.Ib, min=0.)
     # Equation 11 of Dalla Man et al., 2007b
     dI_1= -params.ki * (I_1 - I)
     dI_d= -params.ki * (I_d - I_1)

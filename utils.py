@@ -67,8 +67,10 @@ def load_patient(patient_id: Union[str, int]):
         else:
             raise ValueError("patient_id should be between 1 and 30")
         patient_id = f"{kind}#{id:03d}"
-    df = pd.read_csv("vpatient_params.csv", index_col=0)
     print("Loading patient", patient_id)
+    df = pd.read_csv("vpatient_params.csv", index_col=0)
+    df2 = pd.read_csv("vpatient_control_params.csv", index_col=0)
+    df = pd.concat([df, df2], axis=1) 
     patient_series = df.loc[patient_id]
     return patient_series
 
