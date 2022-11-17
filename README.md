@@ -7,6 +7,7 @@ Implementation of the UVa/Padova 2008 Simulator for Type 1 Diabetes from
 To install: clone the repo and run `pip install .` from the directory of this package.
 
 Example PyTorch code: `python uva_padova_torch.py`
+Example Jax code: `python uva_padova_jax.py`
 
 Code based on [simglucose](https://github.com/jxx123/simglucose/). We use ICR, CF values from [RL4BG](https://github.com/MLD3/RL4BG/blob/master/bgp/simglucose/params/Quest2.csv).
 
