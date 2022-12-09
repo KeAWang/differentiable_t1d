@@ -1,8 +1,18 @@
 import jax
 import jax.numpy as jnp
 import numpy as np
+import torch
+import pkg_resources
+import pandas as pd
 
-from typing import NamedTuple
+from typing import NamedTuple, Union
+
+VPATIENT_PARAMS_PATH = pkg_resources.resource_filename(
+    "differentiable_t1d", "files/vpatient_params.csv"
+)
+VPATIENT_CONTROL_PARMS_PATH = pkg_resources.resource_filename(
+    "differentiable_t1d", "files/vpatient_control_params.csv"
+)
 
 
 class UvaPadovaParams(NamedTuple):
@@ -44,9 +54,9 @@ class UvaPadova:
     def dynamics(
         params: UvaPadovaParams,
         t,
-        state: np.ndarray,
-        carbs: np.ndarray,
-        insulin: np.ndarray,
+        state: jnp.ndarray,
+        carbs: jnp.ndarray,
+        insulin: jnp.ndarray,
     ):
         """
         Time independent dynamics of the UVA Padova 2008 T1D model.
@@ -183,19 +193,76 @@ class UvaPadova:
         )
 
     @staticmethod
-    def observe_blood_glucose(params: UvaPadovaParams, state):
+    def observe_blood_glucose(params: UvaPadovaParams, state: jnp.ndarray):
         G = state[..., 3] / params.Vg
         return G
 
     @staticmethod
-    def observe_subcutaneous_glucose(params: UvaPadovaParams, state):
+    def observe_subcutaneous_glucose(params: UvaPadovaParams, state: jnp.ndarray):
         Gs = state[..., 12] / params.Vg
         return Gs
 
 
-if __name__ == "__main__":
-    from differentiable_t1d.utils import initialize_patient
+def load_patient(patient_id: Union[str, int]):
+    """
+    Construct patient by patient_id
+    patient_id can be a string or an integer from 1 to 30.
+    If patient_id is an int, it will be converted into:
+        1  - 10: adolescent#001 - adolescent#010
+        11 - 20: adult#001 - adult#001
+        21 - 30: child#001 - child#010
+    """
+    if isinstance(patient_id, int):
+        patient_id = patient_id - 1
+        kind, id = patient_id // 10, patient_id % 10 + 1
+        if kind == 0:
+            kind = "adolescent"
+        elif kind == 1:
+            kind = "adult"
+        elif kind == 2:
+            kind = "child"
+        else:
+            raise ValueError("patient_id should be between 1 and 30")
+        patient_id = f"{kind}#{id:03d}"
+    print("Loading patient", patient_id)
+    df = pd.read_csv(VPATIENT_PARAMS_PATH, index_col=0)
+    df2 = pd.read_csv(VPATIENT_CONTROL_PARMS_PATH, index_col=0)
+    df = pd.concat([df, df2], axis=1)
+    patient_series = df.loc[patient_id]
+    return patient_series
 
+
+def initialize_patient(patient_id: Union[str, int], to_tensors=False):
+    """Load patient parameters and initial state"""
+
+    all_params = load_patient(patient_id)
+    params = UvaPadovaParams(
+        **{
+            k: np.array(float(v))
+            for k, v in all_params.items()
+            if k in UvaPadovaParams._fields
+        }
+    )
+    init_state = np.array([all_params[f"x0_{i}"] for i in range(1, 14)])
+    unused_params = {
+        k: v
+        for k, v in all_params.items()
+        if (k not in UvaPadovaParams._fields) and (k[:2] != "x0")
+    }
+
+    if to_tensors:
+        params = UvaPadovaParams(
+            *[torch.as_tensor(p, dtype=torch.float) for p in params]
+        )
+        unused_params = {
+            k: torch.as_tensor(v, dtype=torch.float) for k, v in unused_params.items()
+        }
+        init_state = torch.as_tensor(init_state, dtype=torch.float)
+
+    return params, unused_params, init_state
+
+
+if __name__ == "__main__":
     params, unused_params, init_state = initialize_patient(1, to_tensors=False)
     state = init_state.copy()
     t = 0
