@@ -15,11 +15,13 @@ def square_profile(dose, duration, t):
 
 def two_compartment_profile(dose, k1, k2, t):
     """Two compartment chain model solution
-    Solution to
+    Consider
         dx1/dt = -k1 * x1
         dx2/dt = k1 * x1 - k2 * x2
         x1(0) = dose
         x2(0) = 0
+    This function gives k2 * x2, the rate at which contents flow out of the system.
+    Note that integrating this function from time=0 to infinity will give you `dose`.
 
     Example usage:
         t = jnp.linspace(0, 100, 1000)
