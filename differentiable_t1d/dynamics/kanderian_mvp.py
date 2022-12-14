@@ -59,6 +59,17 @@ class KanderianMvp:
             `carbs` is R_A(t) in the paper and has units of mg/dL/min. C_H has units of mg (representing the amount of carbs eaten)
             `insulin` is ID(t)/tau1/ci in the paper and has units of muU/mL/min.
 
+
+        Equations:
+        dstate(t) =
+            [[-(gezi + Ieff(t)), 0, 0, 0, 0],
+             [0, -p2, 0, p2 * si, 0],
+             [0, 0, -1/tau1, 0, 0],
+             [0, 0, 1/tau2, -1/tau2, 0],
+             [1/tausen, 0, 0, 0, -1/tausen]] @ state(t)
+            + [egp + carbs, 0, insulin, 0, 0]
+
+
         Args:
             params: Params of patient
             t: time; not used
@@ -87,11 +98,11 @@ class KanderianMvp:
 
     @staticmethod
     def observe_blood_glucose(params: KanderianMvpParams, state: jnp.ndarray):
-        return state[..., 0]
+        return state[..., 0:1]
 
     @staticmethod
     def observe_subcutaneous_glucose(params: KanderianMvpParams, state: jnp.ndarray):
-        return state[..., 4]
+        return state[..., 4:5]
 
 
 def load_patient(patient_id: int):

@@ -16,13 +16,13 @@ VPATIENT_CONTROL_PARMS_PATH = pkg_resources.resource_filename(
 
 
 class UvaPadovaParams(NamedTuple):
-    b: float  # the second flex point of gastric emptying rate
-    d: float  # the first flex point of gastric emptying rate (called c in the original paper on oral glucose)
-    kmin: float
-    kmax: float
-    kabs: float
+    b: float  # s; the second flex point of gastric emptying rate
+    d: float  # s; the first flex point of gastric emptying rate (called c in the original paper on oral glucose)
+    kmin: float  # s
+    kmax: float  # s
+    kabs: float  # s
     kp1: float
-    kp2: float
+    kp2: float  # s
     kp3: float
     Fsnc: float
     ke1: float
@@ -31,22 +31,22 @@ class UvaPadovaParams(NamedTuple):
     Vm0: float
     Vmx: float
     Km0: float
-    k1: float
-    k2: float
-    m1: float
-    m2: float
-    m30: float
-    m4: float
+    k1: float  # s
+    k2: float  # s
+    m1: float  # s
+    m2: float  # s
+    m30: float  # s
+    m4: float  # s
     ka1: float
     ka2: float
-    Vi: float
+    Vi: float  # s
     p2u: float
-    Ib: float
-    ki: float
+    Ib: float  # s
+    ki: float  # s
     kd: float
     ksc: float
-    BW: float
-    Vg: float
+    BW: float  # s
+    Vg: float  # s
 
 
 class UvaPadova:
