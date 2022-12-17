@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 import jax
 import jax.numpy as jnp
 import torch
@@ -29,6 +29,7 @@ class KanderianMvpParams(NamedTuple):
     egp: float  # mg/dL/min
     gezi: float  # 1 / min
     si: float  # mL/muU
+    tau_m: Optional[float] = None  # min
 
 
 class KanderianMvp:
@@ -62,7 +63,7 @@ class KanderianMvp:
 
         Equations:
         dstate(t) =
-            [[-(gezi + Ieff(t)), 0, 0, 0, 0],
+            [[-gezi, -G(t), 0, 0, 0],
              [0, -p2, 0, p2 * si, 0],
              [0, 0, -1/tau1, 0, 0],
              [0, 0, 1/tau2, -1/tau2, 0],
@@ -105,6 +106,43 @@ class KanderianMvp:
         return state[..., 4:5]
 
 
+class KanderianMvpWithGlucoseCompartments:
+    @staticmethod
+    def dynamics(
+        params: KanderianMvpParams,
+        t,
+        state: jnp.ndarray,
+        carbs: jnp.ndarray,
+        insulin: jnp.ndarray,
+    ):
+        state = jnp.clip(state, a_min=0.0)  # clamp to avoid negative values
+        G, Ieff, Isc, Ip, Gisf, G1, G2 = jnp.split(state, 7)
+
+        # Glucose dynamics
+        dG1 = -G1 / params.tau_m + carbs
+        dG2 = -G2 / params.tau_m + G1 / params.tau_m
+        dG = -(params.gezi + Ieff) * G + params.egp + G2 / params.tau_m  # Eq 4
+        dIeff = -params.p2 * Ieff + params.p2 * params.si * Ip  # Eq 3
+
+        # Insulin dynamics (2 compartments)
+        dIsc = -Isc / params.tau1 + insulin  # Eq 1
+        dIp = -Ip / params.tau2 + Isc / params.tau2  # Eq 2
+
+        # Interstitial glucose dynamics
+        dGisf = -Gisf / params.tausen + G / params.tausen  # Eq 10
+
+        dstate = jnp.concatenate([dG, dIeff, dIsc, dIp, dGisf, dG1, dG2])
+        return dstate, None
+
+    @staticmethod
+    def observe_blood_glucose(params: KanderianMvpParams, state: jnp.ndarray):
+        return state[..., 0:1]
+
+    @staticmethod
+    def observe_subcutaneous_glucose(params: KanderianMvpParams, state: jnp.ndarray):
+        return state[..., 4:5]
+
+
 def load_patient(patient_id: int):
     df = pd.read_csv(DYNAMICS_PARAMS_PATH, index_col=0)
     patient_series = df.loc[patient_id]
@@ -116,7 +154,9 @@ def load_meals():
     return df
 
 
-def initialize_patient(patient_id: int, to_tensors=False):
+def initialize_patient(
+    patient_id: int, to_tensors=False, with_glucose_compartments=False
+):
     """Load patient parameters and initial state"""
 
     all_params = load_patient(patient_id)
@@ -125,9 +165,17 @@ def initialize_patient(patient_id: int, to_tensors=False):
             k: np.array(float(v))
             for k, v in all_params.items()
             if k in KanderianMvpParams._fields
-        }
+        },
+        tau_m=np.array(4.0) if with_glucose_compartments else None,
     )
-    init_state = np.array([140.0, 1e-2, 10.0, 10.0, 140.0])  # heuristic initial state
+    if with_glucose_compartments:
+        init_state = np.array(
+            [140.0, 1e-2, 10.0, 10.0, 140.0, 0.0, 0.0]
+        )  # heuristic initial state
+    else:
+        init_state = np.array(
+            [140.0, 1e-2, 10.0, 10.0, 140.0]
+        )  # heuristic initial state
 
     if to_tensors:
         params = KanderianMvpParams(
